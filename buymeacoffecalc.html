@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Islamic Time Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS (for modern styling and responsiveness) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        h1, h4 {
+            color: #343a40;
+        }
+        .container {
+            max-width: 600px;
+        }
+        /* Right-to-Left support for Arabic */
+        [dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+        [dir="rtl"] .form-label {
+            text-align: right;
+        }
+        [dir="rtl"] .form-control, [dir="rtl"] .form-select {
+            text-align: right;
+        }
+        /* Language Switch Button */
+        .language-switch {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switch Button -->
+    <div class="language-switch">
+        <button id="languageToggle" class="btn btn-secondary">عربي</button>
+    </div>
+    <div class="container my-5">
+        <h1 class="text-center mb-4" id="appTitle">Islamic Time Calculator</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Input Form -->
+                <form id="timeForm">
+                    <div class="mb-3">
+                        <label for="maghribTime" class="form-label" id="maghribLabel">Maghrib Time</label>
+                        <input type="time" class="form-control" id="maghribTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fajrTime" class="form-label" id="fajrLabel">Fajr Time</label>
+                        <input type="time" class="form-control" id="fajrTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" id="calculationLabel">Calculation Type</label>
+                        <select class="form-select" id="calculationType">
+                            <option value="midnight">Islamic Midnight</option>
+                            <option value="lastThird">Start of Last Third of the Night</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="calculateButton">Calculate</button>
+                </form>
+                <!-- Result Display -->
+                <div class="mt-4">
+                    <h4 id="result"></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Buy Me a Coffee Widget -->
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="alathari" data-description="Support me on Buy me a coffee!" data-message="" data-color="#5F7FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+    <!-- Bootstrap JS (for interactivity, optional in this case) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript Logic -->
+    <script>
+        // Language translations
+        const translations = {
+            en: {
+                appTitle: 'Islamic Time Calculator',
+                maghribLabel: 'Maghrib Time',
+                fajrLabel: 'Fajr Time',
+                calculationLabel: 'Calculation Type',
+                calculationOptions: {
+                    midnight: 'Islamic Midnight',
+                    lastThird: 'Start of Last Third of the Night'
+                },
+                calculateButton: 'Calculate',
+                resultMidnight: 'Islamic Midnight is at: ',
+                resultLastThird: 'Last Third of the Night starts at: ',
+                alertEnterTimes: 'Please enter both Maghrib and Fajr times.',
+                languageButton: 'عربي'
+            },
+            ar: {
+                appTitle: 'حاسبة الوقت الإسلامي',
+                maghribLabel: 'وقت المغرب',
+                fajrLabel: 'وقت الفجر',
+                calculationLabel: 'نوع الحساب',
+                calculationOptions: {
+                    midnight: 'منتصف الليل الشرعي',
+                    lastThird: 'بداية الثلث الأخير من الليل'
+                },
+                calculateButton: 'احسب',
+                resultMidnight: 'منتصف الليل الشرعي عند الساعة: ',
+                resultLastThird: 'يبدأ الثلث الأخير من الليل عند الساعة: ',
+                alertEnterTimes: 'يرجى إدخال وقتي المغرب والفجر.',
+                languageButton: 'English'
+            }
+        };
+
+        // Set default language to English
+        let currentLanguage = 'en';
+
+        // Function to update the text content based on the selected language
+        function updateLanguageTexts() {
+            const t = translations[currentLanguage];
+
+            document.getElementById('appTitle').innerText = t.appTitle;
+            document.getElementById('maghribLabel').innerText = t.maghribLabel;
+            document.getElementById('fajrLabel').innerText = t.fajrLabel;
+            document.getElementById('calculationLabel').innerText = t.calculationLabel;
+            document.getElementById('calculateButton').innerText = t.calculateButton;
+            document.getElementById('languageToggle').innerText = t.languageButton;
+
+            // Update calculation type options
+            const calculationType = document.getElementById('calculationType');
+            calculationType.options[0].text = t.calculationOptions.midnight;
+            calculationType.options[1].text = t.calculationOptions.lastThird;
+
+            // Adjust text direction for Arabic
+            if (currentLanguage === 'ar') {
+                document.documentElement.setAttribute('lang', 'ar');
+                document.body.setAttribute('dir', 'rtl');
+            } else {
+                document.documentElement.setAttribute('lang', 'en');
+                document.body.setAttribute('dir', 'ltr');
+            }
+
+            // Clear result on language change
+            document.getElementById('result').innerText = '';
+        }
+
+        // Language toggle button event listener
+        document.getElementById('languageToggle').addEventListener('click', function() {
+            currentLanguage = currentLanguage === 'en' ? 'ar' : 'en';
+            updateLanguageTexts();
+        });
+
+        // Initial language setup
+        updateLanguageTexts();
+
+        document.getElementById('timeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const maghribInput = document.getElementById('maghribTime').value;
+            const fajrInput = document.getElementById('fajrTime').value;
+            const calculationType = document.getElementById('calculationType').value;
+
+            if (!maghribInput || !fajrInput) {
+                alert(translations[currentLanguage].alertEnterTimes);
+                return;
+            }
+
+            // Parse the input times
+            let maghribTime = parseTime(maghribInput);
+            let fajrTime = parseTime(fajrInput);
+
+            // Adjust for times that cross midnight
+            if (fajrTime <= maghribTime) {
+                // Fajr is on the next day
+                fajrTime.setDate(fajrTime.getDate() + 1);
+            }
+
+            // Calculate the night duration in milliseconds
+            const nightDuration = fajrTime - maghribTime;
+
+            let calculatedTime;
+            let resultText;
+
+            if (calculationType === 'midnight') {
+                // Islamic Midnight: Half of the night
+                const halfNight = nightDuration / 2;
+                calculatedTime = new Date(maghribTime.getTime() + halfNight);
+                resultText = translations[currentLanguage].resultMidnight;
+            } else if (calculationType === 'lastThird') {
+                // Start of the Last Third of the Night
+                const twoThirdsNight = (nightDuration * 2) / 3;
+                calculatedTime = new Date(maghribTime.getTime() + twoThirdsNight);
+                resultText = translations[currentLanguage].resultLastThird;
+            }
+
+            // Format the result
+            const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+            const resultTime = calculatedTime.toLocaleTimeString([], options);
+
+            document.getElementById('result').innerText = resultText + resultTime;
+        });
+
+        function parseTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+
+            // Create a new Date object and set time
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+
+            // Ensure dates are consistent
+            if (date < new Date()) {
+                // If the time has already passed today, set it for tomorrow
+                date.setDate(date.getDate() + 1);
+            }
+
+            return date;
+        }
+    </script>
+</body>
+</html>
